@@ -1,7 +1,7 @@
 use std::error::Error;
 
-mod tui;
+mod core;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    tui::main::main()
+    core::app::main()
 }

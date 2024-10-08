@@ -5,7 +5,7 @@ pub enum Method {
     DELETE,
 }
 
-#[derive(Clone)]
+// #[derive(Clone)]
 pub struct Request {
     method: Method,
     url: String,
@@ -18,4 +18,8 @@ impl Request {
             url: String::new(),
         }
     }
+    
+    // pub fn method(&self) -> &Method {
+    //     &self.method
+    // }
 }
