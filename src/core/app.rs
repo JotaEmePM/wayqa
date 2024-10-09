@@ -86,14 +86,13 @@ async fn run_app<B: Backend>(
                         state.change_mode(InputMode::Normal);
                     }
                     KeyCode::Char('m') => {
-                        state.change_mode(InputMode::RequestMethod);
-                    }
-                    _ => {}
-                },
-                InputMode::RequestMethod => match key.code {
-                    KeyCode::Down => {
-                        //state.selected_method_index += 1;
-
+                        let now: Instant = Instant::now();
+                        if state.last_selected_method.is_none()
+                            || now.duration_since(state.last_selected_method.unwrap())
+                                >= Duration::from_secs(1){
+                                    state.current_request.change_next_method();
+                                    state.last_selected_method = Some(now);
+                                }
                     }
                     _ => {}
                 },
@@ -147,15 +146,12 @@ fn ui(f: &mut Frame, state: &mut Wayqa) {
 
     let title_Line = status_bar_generator(&state.input_mode);
     f.render_widget(
-        Block::new()
-            .borders(Borders::NONE)
-            .title(title_Line),
+        Block::new().borders(Borders::NONE).title(title_Line),
         status_bar,
     );
 }
 
 fn render_request_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
-    
     let mut selected_method = 0;
 
     let vertical_request = Layout::vertical(
@@ -174,24 +170,24 @@ fn render_request_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
         Layout::horizontal([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
             .split(vertical_request[0]);
 
-    let method_input = Paragraph::new(state.current_request.url.as_str())
-    .style(match state.input_mode {
-        InputMode::RequestMethod => Style::default().fg(Color::Yellow.into()),
-        _ => Style::default(),
-    })
-    .block(Block::bordered().title("Method"));
-f.render_widget(method_input, method_url_layout[0]);
+    let method_input = Paragraph::new(state.current_request.get_method_str().to_string())
+        // .style(match state.input_mode {
+        //     InputMode::RequestMethod => Style::default().fg(Color::Yellow.into()),
+        //     _ => Style::default(),
+        // })
+        .block(Block::bordered().title("Method"));
+    f.render_widget(method_input, method_url_layout[0]);
 
     let url_input = Paragraph::new(state.current_request.url.as_str())
         .style(match state.input_mode {
-            InputMode::RequestMethod => Style::default().fg(Color::Yellow.into()),
+            InputMode::RequestUrl => Style::default().fg(Color::Yellow.into()),
             _ => Style::default(),
         })
         .block(Block::bordered().title("URL"));
     f.render_widget(url_input, method_url_layout[1]);
 }
 
-fn status_bar_generator(input_mode: &InputMode) -> Line<'static>{
+fn status_bar_generator(input_mode: &InputMode) -> Line<'static> {
     /*
     InputMode::Normal => {
             let text = Span::from(vec![
@@ -251,21 +247,21 @@ fn status_bar_generator(input_mode: &InputMode) -> Line<'static>{
             ]);
             mixed_line
         }
-        InputMode::RequestMethod => {
-            let mixed_line = Line::from(vec![
-                Span::from("Select "),
-                Span::styled("M", Style::default().fg(Color::Green.into()))
-                    .add_modifier(Modifier::BOLD),
-                Span::from("ethod | "),
-                Span::styled("U", Style::default().fg(Color::Green.into()))
-                    .add_modifier(Modifier::BOLD),
-                Span::from("RL | "),
-                Span::styled("ESC", Style::default().fg(Color::Green.into()))
-                    .add_modifier(Modifier::BOLD),
-                Span::from("-> Normal mode"),
-            ]);
-            mixed_line
-        },
+        // InputMode::RequestMethod => {
+        //     let mixed_line = Line::from(vec![
+        //         Span::from("Select "),
+        //         Span::styled("M", Style::default().fg(Color::Green.into()))
+        //             .add_modifier(Modifier::BOLD),
+        //         Span::from("ethod | "),
+        //         Span::styled("U", Style::default().fg(Color::Green.into()))
+        //             .add_modifier(Modifier::BOLD),
+        //         Span::from("RL | "),
+        //         Span::styled("ESC", Style::default().fg(Color::Green.into()))
+        //             .add_modifier(Modifier::BOLD),
+        //         Span::from("-> Normal mode"),
+        //     ]);
+        //     mixed_line
+        // },
         InputMode::RequestUrl => todo!(),
     };
 
