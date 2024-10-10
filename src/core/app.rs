@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event::Key, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event::Key, KeyCode, KeyEventKind},
     execute,
     style::Color,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -21,6 +21,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut app = Wayqa::new();
+    
     run_app(&mut terminal, &mut app)?;
 
     // restore terminal
@@ -39,65 +40,95 @@ async fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     state: &mut Wayqa,
 ) -> Result<(), std::io::Error> {
+
     loop {
         terminal.draw(|f| ui(f, state))?;
 
         if let Key(key) = event::read()? {
-            match state.input_mode {
-                InputMode::Normal => match key.code {
-                    //&& key.modifiers.contains(KeyModifiers::CONTROL)
-                    KeyCode::Char('q') => {
-                        return Ok(());
-                    }
-                    KeyCode::Char('p') => {
-                        state.change_mode(InputMode::Project);
-                    }
-                    KeyCode::Char('r') => {
-                        state.change_mode(InputMode::Request);
-                    }
-                    KeyCode::Char('l') => {
-                        // TODO: Cambio de tecla para configuracion de layout
-                        let now = Instant::now();
-                        if state.last_toggle_project_layout_visible.is_none()
-                            || now.duration_since(state.last_toggle_project_layout_visible.unwrap())
-                                > Duration::from_secs(1)
-                        {
-                            state.toggle_project_layout();
-                            state.last_toggle_project_layout_visible = Some(now);
+            if key.kind == KeyEventKind::Press{
+                match state.input_mode {
+                
+                    InputMode::Normal => match key.code {
+                        //&& key.modifiers.contains(KeyModifiers::CONTROL)
+                        KeyCode::Char('q') => {
+                            return Ok(());
                         }
-                    }
-
-                    _ => {}
-                },
-                InputMode::Project => match key.code {
-                    KeyCode::Esc => {
-                        state.change_mode(InputMode::Normal);
-                    }
-                    KeyCode::Char('n') => {
-                        // TODO: New Project
-                        if state.saved_info == false {
-                            // TODO: Mostrar popup confirmando guardar informacion
+                        KeyCode::Char('p') => {
+                            state.change_mode(InputMode::Project);
                         }
-                    }
-                    _ => {}
-                },
-                InputMode::Request => match key.code {
-                    KeyCode::Esc => {
-                        state.change_mode(InputMode::Normal);
-                    }
-                    KeyCode::Char('m') => {
-                        let now: Instant = Instant::now();
-                        if state.last_selected_method.is_none()
-                            || now.duration_since(state.last_selected_method.unwrap())
-                                >= Duration::from_secs(1){
-                                    state.current_request.change_next_method();
-                                    state.last_selected_method = Some(now);
-                                }
-                    }
-                    _ => {}
-                },
-                InputMode::RequestUrl => todo!(),
+                        KeyCode::Char('r') => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        KeyCode::Char('l') => {
+                            // TODO: Cambio de tecla para configuracion de layout
+                            let now = Instant::now();
+                            if state.last_toggle_project_layout_visible.is_none()
+                                || now.duration_since(state.last_toggle_project_layout_visible.unwrap())
+                                    > Duration::from_secs(1)
+                            {
+                                state.toggle_project_layout();
+                                state.last_toggle_project_layout_visible = Some(now);
+                            }
+                        }
+    
+                        _ => {}
+                    },
+                    InputMode::Project => match key.code {
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Normal);
+                        }
+                        KeyCode::Char('n') => {
+                            // TODO: New Project
+                            if state.saved_info == false {
+                                // TODO: Mostrar popup confirmando guardar informacion
+                            }
+                        }
+                        _ => {}
+                    },
+                    InputMode::Request => match key.code {
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Normal);
+                        }
+                        KeyCode::Char('u') => {
+                            state.change_mode(InputMode::RequestUrl);
+                        }
+                        KeyCode::Char('m') => {
+                            let now: Instant = Instant::now();
+                            if state.last_selected_method.is_none()
+                                || now.duration_since(state.last_selected_method.unwrap())
+                                    >= Duration::from_secs(1)
+                            {
+                                state.current_request.change_next_method();
+                                state.last_selected_method = Some(now);
+                            }
+                        }
+                        _ => {}
+                    },
+                    InputMode::RequestUrl => match key.code {
+                        KeyCode::Tab => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        KeyCode::Left => {
+                            state.move_cursor_url_left();
+                        }
+                        KeyCode::Right => {
+                            state.move_cursor_url_right();
+                        }
+                        KeyCode::Char(c) => {
+                            state.enter_char_request_url(c);
+                        }
+                        KeyCode::Backspace => {
+                            state.delete_char_request_url();
+                        }
+    
+                        _ => {}
+                    },
+                }
             }
+            
         }
     }
 }
@@ -144,21 +175,18 @@ fn ui(f: &mut Frame, state: &mut Wayqa) {
         .fg(Color::Cyan);
     f.render_widget(title_bar_block, title_bar);
 
-    let title_Line = status_bar_generator(&state.input_mode);
+    let title_line = status_bar_generator(&state.input_mode);
     f.render_widget(
-        Block::new().borders(Borders::NONE).title(title_Line),
+        Block::new().borders(Borders::NONE).title(title_line),
         status_bar,
     );
 }
 
 fn render_request_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
-    let mut selected_method = 0;
-
     let vertical_request = Layout::vertical(
         [
             Constraint::Length(3),
-            Constraint::Length(3),
-            Constraint::Min(1),
+            Constraint::Fill(1)
         ]
         .as_ref(),
     )
@@ -178,13 +206,35 @@ fn render_request_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
         .block(Block::bordered().title("Method"));
     f.render_widget(method_input, method_url_layout[0]);
 
-    let url_input = Paragraph::new(state.current_request.url.as_str())
+    let url_input = Paragraph::new(state.current_request.url.to_string())
         .style(match state.input_mode {
             InputMode::RequestUrl => Style::default().fg(Color::Yellow.into()),
             _ => Style::default(),
         })
         .block(Block::bordered().title("URL"));
     f.render_widget(url_input, method_url_layout[1]);
+
+    match state.input_mode {
+        InputMode::RequestUrl => {
+            f.set_cursor_position(Position::new(
+                method_url_layout[1].x + state.url_cursor_position as u16 +1,
+                method_url_layout[1].y + 1
+            ));
+        }
+        _ => {}
+    }
+
+    render_request_tab(f, vertical_request[1], state);
+}
+
+fn render_request_tab(f: &mut Frame, block: Rect, state: &mut Wayqa) {
+    let tab = Tabs::new(state.get_tab_titles())
+        .block(Block::default())
+        //.select(state.current_request.get_selected_tab())
+        //.style(Style::default().fg(Color::Yellow))
+        .highlight_style(Style::default().fg(ratatui::style::Color::Yellow).add_modifier(Modifier::BOLD))
+        .divider(Span::raw("|"));
+    f.render_widget(tab, block);
 }
 
 fn status_bar_generator(input_mode: &InputMode) -> Line<'static> {
@@ -262,8 +312,24 @@ fn status_bar_generator(input_mode: &InputMode) -> Line<'static> {
         //     ]);
         //     mixed_line
         // },
-        InputMode::RequestUrl => todo!(),
+        InputMode::RequestUrl => {
+            let mixed_line = Line::from(vec![
+                Span::from("Select "),
+                Span::styled("M", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("ethod | "),
+                Span::styled("U", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("RL | "),
+                Span::styled("ESC", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("-> Normal mode"),
+            ]);
+            mixed_line
+        },
     };
 
     result
 }
+
+
