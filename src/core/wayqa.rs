@@ -12,6 +12,15 @@ pub enum InputMode {
     RequestUrl,
 }
 
+pub enum RequestTab {
+    Params,
+    Authorization,
+    Headers,
+    Body,
+    Settings,
+    Response
+}
+
 pub struct Wayqa {    
     pub input_mode: InputMode,
     pub in_project: bool,
@@ -21,6 +30,8 @@ pub struct Wayqa {
     pub project_layout_visible: bool,
     pub valid_request: bool,
     pub cursor_visible: bool,
+
+    pub current_request_active_tab: RequestTab,
 
     // Request inputs
     pub url_cursor_position: usize,
@@ -40,6 +51,8 @@ impl Wayqa {
             project_layout_visible: false,
             valid_request: false,
             cursor_visible: true,
+
+            current_request_active_tab: RequestTab::Params,
 
             // Request Input
             url_cursor_position: 0,
@@ -116,13 +129,7 @@ impl Wayqa {
     }
 
     pub fn get_tab_titles(&self) -> Vec<Line> {
-        // let mut titles = Vec::new();
-        // titles.push(String::from("Params"));
-        // titles.push(String::from("Authorization"));
-        // titles.push(String::from("Headers"));
-        // titles.push(String::from("Body"));
-        // titles.push(String::from("Settings"));
-        // titles.push(String::from("Response"));
+
 
         let titles = vec![
             Line::from(vec![

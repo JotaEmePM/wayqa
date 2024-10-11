@@ -24,23 +24,23 @@ impl Request {
         }
     }
 
-    pub fn new_width_url(url: String) -> Request {
-        Request {
-            method: Method::GET,
-            url
-        }
-    }
+    // pub fn new_width_url(url: String) -> Request {
+    //     Request {
+    //         method: Method::GET,
+    //         url
+    //     }
+    // }
 
-    pub fn new_width_method(method: Method, url: String) -> Request {
-        Request {
-            method,
-            url
-        }
-    }
+    // pub fn new_width_method(method: Method, url: String) -> Request {
+    //     Request {
+    //         method,
+    //         url
+    //     }
+    // }
 
-    pub fn change_method(&mut self, new_method: Method) {
-        self.method = new_method;
-    }
+    // pub fn change_method(&mut self, new_method: Method) {
+    //     self.method = new_method;
+    // }
 
     pub fn change_next_method (&mut self) {
         let new_method  = match  &self.method {
@@ -66,8 +66,4 @@ impl Request {
             Method::OPTIONS => String::from("OPTIONS"),
         }
     }
-
-    
-
-
 }
