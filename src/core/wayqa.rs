@@ -10,6 +10,8 @@ pub enum InputMode {
     Project,
     Request,
     RequestUrl,
+    RequestParamsTab,
+    RequestResponseTab,
 }
 
 pub enum RequestTab {
@@ -129,26 +131,30 @@ impl Wayqa {
     }
 
     pub fn get_tab_titles(&self) -> Vec<Line> {
-
-
         let titles = vec![
             Line::from(vec![
-                Span::styled("Params", Style::default().bg(Color::Green.into())).add_modifier(Modifier::BOLD)
+                Span::styled("[1] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
+                Span::styled("Params", Style::default()).add_modifier(Modifier::BOLD)
             ]),
             Line::from(vec![
-                Span::styled("Authorization", Style::default().bg(Color::Green.into())).add_modifier(Modifier::BOLD)
+                Span::styled("[2] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
+                Span::styled("Authorization", Style::default()).add_modifier(Modifier::BOLD)
             ]),
             Line::from(vec![
-                Span::styled("Headers", Style::default().bg(Color::Green.into())).add_modifier(Modifier::BOLD)
+                Span::styled("[3] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
+                Span::styled("Headers", Style::default()).add_modifier(Modifier::BOLD)
             ]),
             Line::from(vec![
-                Span::styled("Body", Style::default().bg(Color::Green.into())).add_modifier(Modifier::BOLD)
+                Span::styled("[4] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
+                Span::styled("Body", Style::default()).add_modifier(Modifier::BOLD)
             ]),
             Line::from(vec![
-                Span::styled("Settings", Style::default().bg(Color::Green.into())).add_modifier(Modifier::BOLD)
+                Span::styled("[5] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
+                Span::styled("Settings", Style::default()).add_modifier(Modifier::BOLD)
             ]),
             Line::from(vec![
-                Span::styled("Response", Style::default().bg(Color::Green.into())).add_modifier(Modifier::BOLD)
+                Span::styled("[6] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
+                Span::styled("Response", Style::default()).add_modifier(Modifier::BOLD)
             ]),
         ];
         titles

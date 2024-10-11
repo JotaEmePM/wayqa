@@ -105,26 +105,38 @@ async fn run_app<B: Backend>(
                                 state.last_selected_method = Some(now);
                             }
                         }
-                        KeyCode::char('1') => {
+                        KeyCode::Char('1') => {
+                            state.change_mode(InputMode::RequestParamsTab);
                             state.current_request_active_tab = RequestTab::Params;
                         }
-                        KeyCode::char('2') => {
+                        KeyCode::Char('2') => {
                             state.current_request_active_tab = RequestTab::Authorization;
                         }
-                        KeyCode::char('3') => {
+                        KeyCode::Char('3') => {
                             state.current_request_active_tab = RequestTab::Headers;
                         }
-                        KeyCode::char('4') => {
+                        KeyCode::Char('4') => {
                             state.current_request_active_tab = RequestTab::Body;
                         }
-                        KeyCode::char('5') => {
+                        KeyCode::Char('5') => {
                             state.current_request_active_tab = RequestTab::Settings;
                         }
-                        KeyCode::char('6') => {
+                        KeyCode::Char('6') => {
+                            state.change_mode(InputMode::RequestResponseTab);
                             state.current_request_active_tab = RequestTab::Response;
                         }
                         KeyCode::F(5) =>{
                             // ToDo: Comprobar que el request sea valido.
+                            let response = state.current_request.execute_request().await;
+                            match response {
+                                Ok(_) => {
+
+                                }
+                                Err(e) => {
+
+                                }
+                            }
+
                             
                         }                        
                         _ => {}
@@ -151,6 +163,18 @@ async fn run_app<B: Backend>(
     
                         _ => {}
                     },
+                    InputMode::RequestParamsTab => match key.code {                        
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        _ => {}                        
+                    },
+                    InputMode::RequestResponseTab => match key.code {                        
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        _ => {}                        
+                    }
                 }
             }
             
@@ -259,7 +283,9 @@ fn render_request_tab(f: &mut Frame, tab_block: Rect,content_block: Rect, state:
         
         //.select(state.current_request.get_selected_tab())
         //.style(Style::default().fg(Color::Yellow))
-        .highlight_style(Style::default().fg(ratatui::style::Color::Yellow).add_modifier(Modifier::BOLD))
+        .highlight_style(
+            Style::default().fg(ratatui::style::Color::Yellow).add_modifier(Modifier::BOLD)
+        )
         .divider(Span::raw(" "))
         .padding("","")
         .select(match state.current_request_active_tab {
@@ -269,12 +295,21 @@ fn render_request_tab(f: &mut Frame, tab_block: Rect,content_block: Rect, state:
             super::wayqa::RequestTab::Body => 3,
             super::wayqa::RequestTab::Settings => 4,
             super::wayqa::RequestTab::Response => 5,
-            _ => {}
         });
+        
     f.render_widget(tab, tab_block);
 
     match state.current_request_active_tab {
-        super::wayqa::RequestTab::Params => state.render_params_tab(f, content_block),
+        super::wayqa::RequestTab::Params => {            
+            render_params_tab(f, content_block, state);
+        },
+        super::wayqa::RequestTab::Authorization => render_authorization_tab(f, content_block, state),
+        super::wayqa::RequestTab::Headers => render_headers_tab(f, content_block, state),
+        super::wayqa::RequestTab::Body => render_body_tab(f, content_block, state),
+        super::wayqa::RequestTab::Settings => render_settings_tab(f, content_block, state),
+        super::wayqa::RequestTab::Response => {            
+            render_response_tab(f, content_block, state);
+        }
         _ => {}
     }
 }
@@ -369,64 +404,79 @@ fn status_bar_generator(input_mode: &InputMode) -> Line<'static> {
             ]);
             mixed_line
         },
-    };
-
-    pub fn render_params_tab<B: Backed>(f: &mut Frame<B>, area: Rect, state: &mut Wayqa) {
-        let horizontal = Layout::horizontal([
-            Constraint::Percentage(100),            
-        ]);
-        let block = horizontal.areas(area);
-        let text = Paragraph::new("Hello from params");
-        f.render_widget(text, block);
-        
-    }
-
-    pub fn render_authorization_tab<B: Backed>(f: &mut Frame<B>, area: Rect, state: &mut Wayqa) {
-        let horizontal = Layout::horizontal([
-            Constraint::Percentage(100),            
-        ]);
-        let block = horizontal.areas(area);
-        let text = Paragraph::new("Hello from authorization");
-        f.render_widget(text, block);
-    }
-
-    pub fn render_headers_tab<B: Backed>(f: &mut Frame<B>, area: Rect, state: &mut Wayqa) {
-        let horizontal = Layout::horizontal([
-            Constraint::Percentage(100),            
-        ]);
-        let block = horizontal.areas(area);
-        let text = Paragraph::new("Hello from headers");
-        f.render_widget(text, block);
-    }
-
-    pub fn render_body_tab<B: Backed>(f: &mut Frame<B>, area: Rect, state: &mut Wayqa) {
-        let horizontal = Layout::horizontal([
-            Constraint::Percentage(100),            
-        ]);
-        let block = horizontal.areas(area);
-        let text = Paragraph::new("Hello from body");
-        f.render_widget(text, block);
-    }
-
-    pub fn render_settings_tab<B: Backed>(f: &mut Frame<B>, area: Rect, state: &mut Wayqa) {
-        let horizontal = Layout::horizontal([
-            Constraint::Percentage(100),            
-        ]);
-        let block = horizontal.areas(area);
-        let text = Paragraph::new("Hello from settings");
-        f.render_widget(text, block);
-    }
-
-    pub fn render_response_tab<B: Backed>(f: &mut Frame<B>, area: Rect, state: &mut Wayqa) {
-        let horizontal = Layout::horizontal([
-            Constraint::Percentage(100),            
-        ]);
-        let block = horizontal.areas(area);
-        let text = Paragraph::new("Hello from response");
-        f.render_widget(text, block);
-    }
-
+        InputMode::RequestParamsTab => {
+            let mixed_line = Line::from(vec![                
+                Span::styled("ESC", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("-> Normal mode"),
+            ]);
+            mixed_line
+        }
+        InputMode::RequestResponseTab => {
+            let mixed_line = Line::from(vec![                
+                Span::styled("ESC", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("-> Normal mode"),
+            ]);
+            mixed_line
+        }
+    };    
     result
+}
+
+pub fn render_params_tab(f: &mut Frame, area: Rect, state: &mut Wayqa) {
+    let horizontal = Layout::horizontal([
+        Constraint::Percentage(100),            
+    ]);
+    let block: [Rect; 1] = horizontal.areas(area);
+    let text = Paragraph::new("Hello from params");
+    f.render_widget(text, block[0]);
+    
+}
+
+pub fn render_authorization_tab(f: &mut Frame, area: Rect, state: &mut Wayqa) {
+    let horizontal = Layout::horizontal([
+        Constraint::Percentage(100),            
+    ]);
+    let block: [Rect; 1] = horizontal.areas(area);
+    let text = Paragraph::new("Hello from authorization");
+    f.render_widget(text, block[0]);
+}
+
+pub fn render_headers_tab(f: &mut Frame, area: Rect, state: &mut Wayqa) {
+    let horizontal = Layout::horizontal([
+        Constraint::Percentage(100),            
+    ]);
+    let block: [Rect; 1] = horizontal.areas(area);
+    let text = Paragraph::new("Hello from headers");
+    f.render_widget(text, block[0]);
+}
+
+pub fn render_body_tab(f: &mut Frame, area: Rect, state: &mut Wayqa) {
+    let horizontal = Layout::horizontal([
+        Constraint::Percentage(100),            
+    ]);
+    let block: [Rect; 1] = horizontal.areas(area);
+    let text = Paragraph::new("Hello from body");
+    f.render_widget(text, block[0]);
+}
+
+pub fn render_settings_tab(f: &mut Frame, area: Rect, state: &mut Wayqa) {
+    let horizontal = Layout::horizontal([
+        Constraint::Percentage(100),            
+    ]);
+    let block: [Rect; 1] = horizontal.areas(area);
+    let text = Paragraph::new("Hello from settings");
+    f.render_widget(text, block[0]);
+}
+
+pub fn render_response_tab(f: &mut Frame, area: Rect, state: &mut Wayqa) {
+    let horizontal = Layout::horizontal([
+        Constraint::Percentage(100),            
+    ]);
+    let block: [Rect; 1] = horizontal.areas(area);
+    let text = Paragraph::new("Hello from response");
+    f.render_widget(text, block[0]);
 }
 
 
