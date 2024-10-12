@@ -10,8 +10,17 @@ use crate::core::wayqa::{InputMode, Wayqa};
 
 pub fn render_footer_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
     let footer_layout =
-        Layout::horizontal([Constraint::Percentage(90), Constraint::Percentage(10)]);
-    let [keybindings, status] = footer_layout.areas(block);
+        Layout::horizontal([
+            Constraint::Fill(1),
+            Constraint::Fill(8), 
+            Constraint::Fill(1)]);
+    let [mode,keybindings, status] = footer_layout.areas(block);
+
+    let mode_line = get_mode_title(&state.input_mode);
+    f.render_widget(
+        Block::new().borders(Borders::NONE).title(mode_line),
+        mode,
+    );
 
     let title_line = status_bar_generator(&state.input_mode);
     f.render_widget(
@@ -35,6 +44,27 @@ pub fn render_footer_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
         }
         false => {}
     }
+}
+
+pub fn get_mode_title(input_mode: &InputMode) -> Line<'static> {
+    let mode_line = match input_mode {
+        InputMode::Normal => Line::from(vec![
+            Span::styled("Normal", Style::default().fg(Color::Green.into())),
+        ]),
+        InputMode::Project => Line::from(vec![
+            Span::styled("Project", Style::default().fg(Color::Green.into())),
+        ]),
+        InputMode::Request | InputMode::RequestUrl => Line::from(vec![
+            Span::styled("Request", Style::default().fg(Color::Green.into())),
+        ]),
+        InputMode::RequestParamsTab  |InputMode::RequestAuthTab |InputMode::RequestHeadersTab | 
+        InputMode::RequestBodyTab | InputMode::RequestSettingsTab | InputMode::RequestResponseTab
+        => Line::from(vec![
+            Span::styled("Request", Style::default().fg(Color::LightBlue.into())),
+        ]),
+        
+    };
+    mode_line
 }
 
 pub fn status_bar_generator(input_mode: &InputMode) -> Line<'static> {
@@ -128,6 +158,38 @@ pub fn status_bar_generator(input_mode: &InputMode) -> Line<'static> {
             mixed_line
         }
         InputMode::RequestParamsTab => {
+            let mixed_line = Line::from(vec![
+                Span::styled("ESC", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("-> Normal mode"),
+            ]);
+            mixed_line
+        }
+        InputMode::RequestAuthTab => {
+            let mixed_line = Line::from(vec![
+                Span::styled("ESC", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("-> Normal mode"),
+            ]);
+            mixed_line
+        }
+        InputMode::RequestHeadersTab => {
+            let mixed_line = Line::from(vec![
+                Span::styled("ESC", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("-> Normal mode"),
+            ]);
+            mixed_line
+        }
+        InputMode::RequestBodyTab => {
+            let mixed_line = Line::from(vec![
+                Span::styled("ESC", Style::default().fg(Color::Green.into()))
+                    .add_modifier(Modifier::BOLD),
+                Span::from("-> Normal mode"),
+            ]);
+            mixed_line
+        }
+        InputMode::RequestSettingsTab => {
             let mixed_line = Line::from(vec![
                 Span::styled("ESC", Style::default().fg(Color::Green.into()))
                     .add_modifier(Modifier::BOLD),

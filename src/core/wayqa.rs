@@ -1,22 +1,22 @@
 use std::time::Instant;
 
-use ratatui::{
-    style::{Color, Modifier, Style, Stylize},
-    text::{Line, Span},
-};
+use super::{components::response::ResponseTab, models::request::Request};
 
-use super::models::request::Request;
-
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum InputMode {
     Normal,
     Project,
     Request,
     RequestUrl,
     RequestParamsTab,
+    RequestAuthTab,
+    RequestHeadersTab,
+    RequestBodyTab,
+    RequestSettingsTab,
     RequestResponseTab,
 }
 
+#[derive(Clone)]
 pub enum RequestTab {
     Params,
     Authorization,
@@ -26,6 +26,7 @@ pub enum RequestTab {
     Response,
 }
 
+#[derive(Clone)]
 pub struct Wayqa {
     pub input_mode: InputMode,
     pub in_project: bool,
@@ -46,6 +47,9 @@ pub struct Wayqa {
 
     pub last_toggle_project_layout_visible: Option<Instant>,
     pub last_selected_method: Option<Instant>,
+
+    // response
+    pub current_response_active_tab: ResponseTab,
 }
 
 impl Wayqa {
@@ -69,6 +73,8 @@ impl Wayqa {
 
             last_toggle_project_layout_visible: None,
             last_selected_method: None,
+
+            current_response_active_tab: ResponseTab::Body,
         }
     }
 
@@ -143,55 +149,7 @@ impl Wayqa {
         self.url_cursor_position = 0;
     }
 
-    pub fn get_tab_titles(&self) -> Vec<Line> {
-        let titles = vec![
-            Line::from(vec![
-                Span::styled("[1] ", Style::default())
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-                Span::styled("Params", Style::default()).add_modifier(Modifier::BOLD),
-            ]),
-            Line::from(vec![
-                Span::styled("[2] ", Style::default())
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-                Span::styled("Authorization", Style::default()).add_modifier(Modifier::BOLD),
-            ]),
-            Line::from(vec![
-                Span::styled("[3] ", Style::default())
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-                Span::styled("Headers", Style::default()).add_modifier(Modifier::BOLD),
-            ]),
-            Line::from(vec![
-                Span::styled("[4] ", Style::default())
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-                Span::styled("Body", Style::default()).add_modifier(Modifier::BOLD),
-            ]),
-            Line::from(vec![
-                Span::styled("[5] ", Style::default())
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-                Span::styled("Settings", Style::default()).add_modifier(Modifier::BOLD),
-            ]),
-            Line::from(vec![
-                Span::styled("[6] ", Style::default())
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-                Span::styled("Response", Style::default()).add_modifier(Modifier::BOLD),
-                match self.request_running {
-                    true => Span::styled(" (Running)", Style::default())
-                        .fg(Color::Red)
-                        .add_modifier(Modifier::BOLD),
-                    false => Span::styled(" (Stopped)", Style::default())
-                        .fg(Color::Green)
-                        .add_modifier(Modifier::BOLD),
-                },
-            ]),
-        ];
-        titles
-    }
+    
 
     pub fn on_tick(&mut self) {
         self.throbber_state.calc_next();

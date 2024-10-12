@@ -1,3 +1,6 @@
+use chrono::{DateTime, Local};
+
+#[derive(Clone)]
 pub enum Method {
     GET,
     POST,
@@ -8,6 +11,7 @@ pub enum Method {
     OPTIONS,
 }
 
+#[derive(Clone)]
 pub enum ResponseCode {
     NONE = 0,
     OK = 200,
@@ -30,11 +34,15 @@ pub enum ResponseCode {
     GATEWAYTIMEOUT = 504,
 }
 
+#[derive(Clone)]
 pub struct Request {
     pub method: Method,
     pub url: String,
-    pub response: String,
-    pub response_code: ResponseCode,
+
+    pub code_status: ResponseCode,
+    pub time: u128,
+    pub size: u64,
+    pub last_executed: DateTime<Local>,
 }
 
 impl Request {
@@ -42,8 +50,10 @@ impl Request {
         Request {
             method: Method::GET,
             url: String::from(""),
-            response: String::from(""),
-            response_code: ResponseCode::NONE,
+            code_status: ResponseCode::NONE,
+            time: 0,
+            size: 0,
+            last_executed: Local::now(),
         }
     }
 
@@ -91,12 +101,29 @@ impl Request {
     }
 
     pub async fn execute_request(&self) -> Result<(), reqwest::Error> {
-        let res = reqwest::get(&self.url).await?;
+        let client = reqwest::Client::new();
+        let request_builder = match self.method {
+            Method::GET => client.get(&self.url),
+            Method::POST => client.post(&self.url),
+            Method::PUT => client.put(&self.url),
+            Method::PATCH => client.patch(&self.url),
+            Method::DELETE => client.delete(&self.url),
+            Method::HEAD => client.head(&self.url),
+            Method::OPTIONS => client.request(reqwest::Method::OPTIONS, &self.url),
+        };
+
+        // Add headers, body, params, and authentication as needed
+        let request_builder = request_builder
+            .header("Content-Type", "application/json")
+            .bearer_auth("your_token_here");
+
+        let res = request_builder.send().await?;
 
         println!("Status: {}", res.status().as_u16());
         println!("Headers:\n{:#?}", res.headers());
 
-        println!("Body:\n{}", res.text().await?);
+        let body = res.text().await?;
+        println!("Body:\n{}", body);
 
         Ok(())
     }

@@ -12,7 +12,7 @@ use std::{
 };
 
 use super::{
-    components::request::render_request_layout,
+    components::{request::render_request_layout, response::ResponseTab},
     wayqa::{InputMode, RequestTab, Wayqa},
 };
 use crate::core::components::footer;
@@ -117,20 +117,26 @@ async fn run_app<B: Backend>(
                             state.current_request_active_tab = RequestTab::Params;
                         }
                         KeyCode::Char('2') => {
+                            state.change_mode(InputMode::RequestAuthTab);
                             state.current_request_active_tab = RequestTab::Authorization;
                         }
                         KeyCode::Char('3') => {
+                            state.change_mode(InputMode::RequestHeadersTab);
                             state.current_request_active_tab = RequestTab::Headers;
                         }
                         KeyCode::Char('4') => {
+                            state.change_mode(InputMode::RequestBodyTab);
                             state.current_request_active_tab = RequestTab::Body;
                         }
                         KeyCode::Char('5') => {
+                            state.change_mode(InputMode::RequestSettingsTab);
                             state.current_request_active_tab = RequestTab::Settings;
                         }
                         KeyCode::Char('6') => {
                             state.change_mode(InputMode::RequestResponseTab);
                             state.current_request_active_tab = RequestTab::Response;
+
+
                         }
                         KeyCode::F(5) => {
                             {
@@ -176,14 +182,301 @@ async fn run_app<B: Backend>(
                         KeyCode::Esc => {
                             state.change_mode(InputMode::Request);
                         }
+                        KeyCode::Char('1') => {
+                            state.change_mode(InputMode::RequestParamsTab);
+                            state.current_request_active_tab = RequestTab::Params;
+                        }
+                        KeyCode::Char('2') => {
+                            state.change_mode(InputMode::RequestAuthTab);
+                            state.current_request_active_tab = RequestTab::Authorization;
+                        }
+                        KeyCode::Char('3') => {
+                            state.change_mode(InputMode::RequestHeadersTab);
+                            state.current_request_active_tab = RequestTab::Headers;
+                        }
+                        KeyCode::Char('4') => {
+                            state.change_mode(InputMode::RequestBodyTab);
+                            state.current_request_active_tab = RequestTab::Body;
+                        }
+                        KeyCode::Char('5') => {
+                            state.change_mode(InputMode::RequestSettingsTab);
+                            state.current_request_active_tab = RequestTab::Settings;
+                        }
+                        KeyCode::Char('6') => {
+                            state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+                        }
+                        KeyCode::F(5) => {
+                            {
+                                state.request_running = true;
+                                state.on_tick();
+                                // ToDo: Comprobar que el request sea valido.
+                                let response = state.current_request.execute_request().await;
+                                match response {
+                                    Ok(_) => {
+                                        // state.request_running = false;
+                                    }
+                                    Err(e) => {
+                                        // state.request_running = false;
+                                    }
+                                }
+                            }
+                        }
                         _ => {}
                     },
                     InputMode::RequestResponseTab => match key.code {
                         KeyCode::Esc => {
                             state.change_mode(InputMode::Request);
                         }
+                        KeyCode::Char('1') => {
+                            state.change_mode(InputMode::RequestParamsTab);
+                            state.current_request_active_tab = RequestTab::Params;
+                        }
+                        KeyCode::Char('2') => {
+                            state.change_mode(InputMode::RequestAuthTab);
+                            state.current_request_active_tab = RequestTab::Authorization;
+                        }
+                        KeyCode::Char('3') => {
+                            state.change_mode(InputMode::RequestHeadersTab);
+                            state.current_request_active_tab = RequestTab::Headers;
+                        }
+                        KeyCode::Char('4') => {
+                            state.change_mode(InputMode::RequestBodyTab);
+                            state.current_request_active_tab = RequestTab::Body;
+                        }
+                        KeyCode::Char('5') => {
+                            state.change_mode(InputMode::RequestSettingsTab);
+                            state.current_request_active_tab = RequestTab::Settings;
+                        }
+                        KeyCode::Char('6') => {
+                     
+                            state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+                        }
+                        KeyCode::Char('7') => {
+                     
+                            state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+
+                            state.current_response_active_tab = ResponseTab::Body;
+                        }
+                        KeyCode::Char('8') => {
+                     
+                            state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+
+                            state.current_response_active_tab = ResponseTab::Cookies;
+                        }
+                        KeyCode::Char('9') => {
+                     
+                            state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+
+                            state.current_response_active_tab = ResponseTab::Headers;
+                        }
+                        KeyCode::F(5) => {
+                            {
+                                state.request_running = true;
+                                state.on_tick();
+                                // ToDo: Comprobar que el request sea valido.
+                                let response = state.current_request.execute_request().await;
+                                match response {
+                                    Ok(_) => {
+                                        // state.request_running = false;
+                                    }
+                                    Err(e) => {
+                                        // state.request_running = false;
+                                    }
+                                }
+                            }
+                        }
                         _ => {}
                     },
+                    InputMode::RequestAuthTab => match key.code {
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        KeyCode::Char('1') => {
+                            state.change_mode(InputMode::RequestParamsTab);
+                            state.current_request_active_tab = RequestTab::Params;
+                        }
+                        KeyCode::Char('2') => {
+                            state.change_mode(InputMode::RequestAuthTab);
+                            state.current_request_active_tab = RequestTab::Authorization;
+                        }
+                        KeyCode::Char('3') => {
+                            state.change_mode(InputMode::RequestHeadersTab);
+                            state.current_request_active_tab = RequestTab::Headers;
+                        }
+                        KeyCode::Char('4') => {
+                            state.change_mode(InputMode::RequestBodyTab);
+                            state.current_request_active_tab = RequestTab::Body;
+                        }
+                        KeyCode::Char('5') => {
+                            state.change_mode(InputMode::RequestSettingsTab);
+                            state.current_request_active_tab = RequestTab::Settings;
+                        }
+                        KeyCode::Char('6') => {
+                              state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+                        }
+                        KeyCode::F(5) => {
+                            {
+                                state.request_running = true;
+                                state.on_tick();
+                                // ToDo: Comprobar que el request sea valido.
+                                let response = state.current_request.execute_request().await;
+                                match response {
+                                    Ok(_) => {
+                                        // state.request_running = false;
+                                    }
+                                    Err(e) => {
+                                        // state.request_running = false;
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    },
+                    InputMode::RequestBodyTab => match key.code {
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        KeyCode::Char('1') => {
+                            state.change_mode(InputMode::RequestParamsTab);
+                            state.current_request_active_tab = RequestTab::Params;
+                        }
+                        KeyCode::Char('2') => {
+                            state.change_mode(InputMode::RequestAuthTab);
+                            state.current_request_active_tab = RequestTab::Authorization;
+                        }
+                        KeyCode::Char('3') => {
+                            state.change_mode(InputMode::RequestHeadersTab);
+                            state.current_request_active_tab = RequestTab::Headers;
+                        }
+                        KeyCode::Char('4') => {
+                            state.change_mode(InputMode::RequestBodyTab);
+                            state.current_request_active_tab = RequestTab::Body;
+                        }
+                        KeyCode::Char('5') => {
+                            state.change_mode(InputMode::RequestSettingsTab);
+                            state.current_request_active_tab = RequestTab::Settings;
+                        }
+                        KeyCode::Char('6') => {
+                              state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+                        }
+                        KeyCode::F(5) => {
+                            {
+                                state.request_running = true;
+                                state.on_tick();
+                                // ToDo: Comprobar que el request sea valido.
+                                let response = state.current_request.execute_request().await;
+                                match response {
+                                    Ok(_) => {
+                                        // state.request_running = false;
+                                    }
+                                    Err(e) => {
+                                        // state.request_running = false;
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    },
+                    InputMode::RequestHeadersTab => match key.code {
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        KeyCode::Char('1') => {
+                            state.change_mode(InputMode::RequestParamsTab);
+                            state.current_request_active_tab = RequestTab::Params;
+                        }
+                        KeyCode::Char('2') => {
+                            state.change_mode(InputMode::RequestAuthTab);
+                            state.current_request_active_tab = RequestTab::Authorization;
+                        }
+                        KeyCode::Char('3') => {
+                            state.change_mode(InputMode::RequestHeadersTab);
+                            state.current_request_active_tab = RequestTab::Headers;
+                        }
+                        KeyCode::Char('4') => {
+                            state.change_mode(InputMode::RequestBodyTab);
+                            state.current_request_active_tab = RequestTab::Body;
+                        }
+                        KeyCode::Char('5') => {
+                            state.change_mode(InputMode::RequestSettingsTab);
+                            state.current_request_active_tab = RequestTab::Settings;
+                        }
+                        KeyCode::Char('6') => {
+                              state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+                        }
+                        KeyCode::F(5) => {
+                            {
+                                state.request_running = true;
+                                state.on_tick();
+                                // ToDo: Comprobar que el request sea valido.
+                                let response = state.current_request.execute_request().await;
+                                match response {
+                                    Ok(_) => {
+                                        // state.request_running = false;
+                                    }
+                                    Err(e) => {
+                                        // state.request_running = false;
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    },
+                    InputMode::RequestSettingsTab => match key.code {
+                        KeyCode::Esc => {
+                            state.change_mode(InputMode::Request);
+                        }
+                        KeyCode::Char('1') => {
+                            state.change_mode(InputMode::RequestParamsTab);
+                            state.current_request_active_tab = RequestTab::Params;
+                        }
+                        KeyCode::Char('2') => {
+                            state.change_mode(InputMode::RequestAuthTab);
+                            state.current_request_active_tab = RequestTab::Authorization;
+                        }
+                        KeyCode::Char('3') => {
+                            state.change_mode(InputMode::RequestHeadersTab);
+                            state.current_request_active_tab = RequestTab::Headers;
+                        }
+                        KeyCode::Char('4') => {
+                            state.change_mode(InputMode::RequestBodyTab);
+                            state.current_request_active_tab = RequestTab::Body;
+                        }
+                        KeyCode::Char('5') => {
+                            state.change_mode(InputMode::RequestSettingsTab);
+                            state.current_request_active_tab = RequestTab::Settings;
+                        }
+                        KeyCode::Char('6') => {
+                              state.change_mode(InputMode::RequestResponseTab);
+                            state.current_request_active_tab = RequestTab::Response;
+                        }
+                        KeyCode::F(5) => {
+                            {
+                                state.request_running = true;
+                                state.on_tick();
+                                // ToDo: Comprobar que el request sea valido.
+                                let response = state.current_request.execute_request().await;
+                                match response {
+                                    Ok(_) => {
+                                        // state.request_running = false;
+                                    }
+                                    Err(e) => {
+                                        // state.request_running = false;
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    },
+
                 }
             }
         }

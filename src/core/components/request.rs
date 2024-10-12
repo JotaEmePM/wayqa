@@ -1,7 +1,7 @@
 use ratatui::{
     layout::{Constraint, Layout, Position, Rect},
-    style::{Color, Modifier, Style},
-    text::Span,
+    style::{Color, Modifier, Style, Stylize},
+    text::{Line, Span},
     widgets::{Block, Paragraph, Tabs},
     Frame,
 };
@@ -14,7 +14,7 @@ pub fn render_request_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
     let vertical_request = Layout::vertical(
         [
             Constraint::Length(3),
-            Constraint::Length(3),
+            Constraint::Length(2),
             Constraint::Fill(1),
         ]
         .as_ref(),
@@ -57,10 +57,20 @@ pub fn render_request_layout(f: &mut Frame, block: Rect, state: &mut Wayqa) {
 }
 
 fn render_request_tab(f: &mut Frame, tab_block: Rect, content_block: Rect, state: &mut Wayqa) {
-    let tab = Tabs::new(state.get_tab_titles())
+    //let tab_titles = get_tab_titles(&state);
+
+    //state.current_request_active_tab_index ;
+    let current_tab = match state.current_request_active_tab {
+        RequestTab::Params => 0,
+        RequestTab::Authorization => 1,
+        RequestTab::Headers => 2,
+        RequestTab::Body => 3,
+        RequestTab::Settings => 4,
+        RequestTab::Response => 5,
+    };
+
+    let tab = Tabs::new(get_tab_titles(state))
         .block(Block::default())
-        //.select(state.current_request.get_selected_tab())
-        //.style(Style::default().fg(Color::Yellow))
         .highlight_style(
             Style::default()
                 .fg(ratatui::style::Color::Yellow)
@@ -68,14 +78,7 @@ fn render_request_tab(f: &mut Frame, tab_block: Rect, content_block: Rect, state
         )
         .divider(Span::raw(" "))
         .padding("", "")
-        .select(match state.current_request_active_tab {
-            RequestTab::Params => 0,
-            RequestTab::Authorization => 1,
-            RequestTab::Headers => 2,
-            RequestTab::Body => 3,
-            RequestTab::Settings => 4,
-            RequestTab::Response => 5,
-        });
+        .select(current_tab);
 
     f.render_widget(tab, tab_block);
 
@@ -127,4 +130,52 @@ pub fn render_settings_tab(f: &mut Frame, area: Rect, state: &mut Wayqa) {
     let block: [Rect; 1] = horizontal.areas(area);
     let text = Paragraph::new("Hello from settings");
     f.render_widget(text, block[0]);
+}
+
+pub fn get_tab_titles(state: &mut Wayqa) -> Vec<Line> {
+    let titles = vec![
+        Line::from(vec![
+            Span::styled("[1] ", Style::default())
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+            Span::styled("Params", Style::default()).add_modifier(Modifier::BOLD),
+        ]),
+        Line::from(vec![
+            Span::styled("[2] ", Style::default())
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+            Span::styled("Authorization", Style::default()).add_modifier(Modifier::BOLD),
+        ]),
+        Line::from(vec![
+            Span::styled("[3] ", Style::default())
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+            Span::styled("Headers", Style::default()).add_modifier(Modifier::BOLD),
+        ]),
+        Line::from(vec![
+            Span::styled("[4] ", Style::default())
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+            Span::styled("Body", Style::default()).add_modifier(Modifier::BOLD),
+        ]),
+        Line::from(vec![
+            Span::styled("[5] ", Style::default())
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+            Span::styled("Settings", Style::default()).add_modifier(Modifier::BOLD),
+        ]),
+        Line::from(vec![
+            Span::styled("[6] ", Style::default())
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+            Span::styled("Response", Style::default()).add_modifier(Modifier::BOLD),
+            match state.request_running {
+                true => Span::styled(" (Running)", Style::default())
+                    .fg(Color::Red)
+                    .add_modifier(Modifier::BOLD),
+                _ => { Span::from("")}
+            },
+        ]),
+    ];
+    titles
 }
