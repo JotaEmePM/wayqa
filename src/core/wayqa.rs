@@ -1,6 +1,9 @@
 use std::time::Instant;
 
-use ratatui::{style::{Color, Modifier, Style, Stylize}, text::{Line, Span}};
+use ratatui::{
+    style::{Color, Modifier, Style, Stylize},
+    text::{Line, Span},
+};
 
 use super::models::request::Request;
 
@@ -20,10 +23,10 @@ pub enum RequestTab {
     Headers,
     Body,
     Settings,
-    Response
+    Response,
 }
 
-pub struct Wayqa {    
+pub struct Wayqa {
     pub input_mode: InputMode,
     pub in_project: bool,
     pub project_name: String,
@@ -32,6 +35,9 @@ pub struct Wayqa {
     pub project_layout_visible: bool,
     pub valid_request: bool,
     pub cursor_visible: bool,
+
+    pub request_running: bool,
+    pub throbber_state: throbber_widgets_tui::ThrobberState,
 
     pub current_request_active_tab: RequestTab,
 
@@ -53,14 +59,16 @@ impl Wayqa {
             project_layout_visible: false,
             valid_request: false,
             cursor_visible: true,
+            request_running: false,
+            throbber_state: throbber_widgets_tui::ThrobberState::default(),
 
             current_request_active_tab: RequestTab::Params,
 
             // Request Input
             url_cursor_position: 0,
-            
+
             last_toggle_project_layout_visible: None,
-            last_selected_method: None
+            last_selected_method: None,
         }
     }
 
@@ -93,7 +101,8 @@ impl Wayqa {
     }
 
     pub fn byte_index_request_url(&self) -> usize {
-        self.current_request.url
+        self.current_request
+            .url
             .char_indices()
             .map(|(i, _)| i)
             .nth(self.url_cursor_position)
@@ -111,7 +120,11 @@ impl Wayqa {
             let from_left_to_current_index = current_index - 1;
 
             // Getting all characters before the selected character.
-            let before_char_to_delete = self.current_request.url.chars().take(from_left_to_current_index);
+            let before_char_to_delete = self
+                .current_request
+                .url
+                .chars()
+                .take(from_left_to_current_index);
             // Getting all characters after selected character.
             let after_char_to_delete = self.current_request.url.chars().skip(current_index);
 
@@ -133,30 +146,54 @@ impl Wayqa {
     pub fn get_tab_titles(&self) -> Vec<Line> {
         let titles = vec![
             Line::from(vec![
-                Span::styled("[1] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
-                Span::styled("Params", Style::default()).add_modifier(Modifier::BOLD)
+                Span::styled("[1] ", Style::default())
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+                Span::styled("Params", Style::default()).add_modifier(Modifier::BOLD),
             ]),
             Line::from(vec![
-                Span::styled("[2] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
-                Span::styled("Authorization", Style::default()).add_modifier(Modifier::BOLD)
+                Span::styled("[2] ", Style::default())
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+                Span::styled("Authorization", Style::default()).add_modifier(Modifier::BOLD),
             ]),
             Line::from(vec![
-                Span::styled("[3] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
-                Span::styled("Headers", Style::default()).add_modifier(Modifier::BOLD)
+                Span::styled("[3] ", Style::default())
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+                Span::styled("Headers", Style::default()).add_modifier(Modifier::BOLD),
             ]),
             Line::from(vec![
-                Span::styled("[4] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
-                Span::styled("Body", Style::default()).add_modifier(Modifier::BOLD)
+                Span::styled("[4] ", Style::default())
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+                Span::styled("Body", Style::default()).add_modifier(Modifier::BOLD),
             ]),
             Line::from(vec![
-                Span::styled("[5] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
-                Span::styled("Settings", Style::default()).add_modifier(Modifier::BOLD)
+                Span::styled("[5] ", Style::default())
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+                Span::styled("Settings", Style::default()).add_modifier(Modifier::BOLD),
             ]),
             Line::from(vec![
-                Span::styled("[6] ", Style::default()).fg(Color::Green).add_modifier(Modifier::BOLD),
-                Span::styled("Response", Style::default()).add_modifier(Modifier::BOLD)
+                Span::styled("[6] ", Style::default())
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+                Span::styled("Response", Style::default()).add_modifier(Modifier::BOLD),
+                match self.request_running {
+                    true => Span::styled(" (Running)", Style::default())
+                        .fg(Color::Red)
+                        .add_modifier(Modifier::BOLD),
+                    false => Span::styled(" (Stopped)", Style::default())
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                },
             ]),
         ];
         titles
+    }
+
+    pub fn on_tick(&mut self) {
+        self.throbber_state.calc_next();
     }
 }

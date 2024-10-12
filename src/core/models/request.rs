@@ -5,7 +5,7 @@ pub enum Method {
     PATCH,
     DELETE,
     HEAD,
-    OPTIONS
+    OPTIONS,
 }
 
 pub enum ResponseCode {
@@ -27,28 +27,23 @@ pub enum ResponseCode {
     NOTIMPLEMENTED = 501,
     BADGATEWAY = 502,
     SERVICEUNAVAILABLE = 503,
-    GATEWAYTIMEOUT = 504
+    GATEWAYTIMEOUT = 504,
 }
 
 pub struct Request {
     pub method: Method,
     pub url: String,
     pub response: String,
-    pub response_code: ResponseCode
+    pub response_code: ResponseCode,
 }
 
-
-
-
-
 impl Request {
-
     pub fn new() -> Request {
         Request {
             method: Method::GET,
             url: String::from(""),
             response: String::from(""),
-            response_code: ResponseCode::NONE
+            response_code: ResponseCode::NONE,
         }
     }
 
@@ -70,15 +65,15 @@ impl Request {
     //     self.method = new_method;
     // }
 
-    pub fn change_next_method (&mut self) {
-        let new_method  = match  &self.method {
+    pub fn change_next_method(&mut self) {
+        let new_method = match &self.method {
             Method::GET => Method::POST,
             Method::POST => Method::PUT,
             Method::PUT => Method::PATCH,
             Method::PATCH => Method::DELETE,
-            Method::DELETE => Method::HEAD,            
-            Method::HEAD => Method::OPTIONS,            
-            Method::OPTIONS => Method::GET,            
+            Method::DELETE => Method::HEAD,
+            Method::HEAD => Method::OPTIONS,
+            Method::OPTIONS => Method::GET,
         };
         self.method = new_method;
     }
@@ -98,16 +93,11 @@ impl Request {
     pub async fn execute_request(&self) -> Result<(), reqwest::Error> {
         let res = reqwest::get(&self.url).await?;
 
-        println!("Status: {}", res.status());
+        println!("Status: {}", res.status().as_u16());
         println!("Headers:\n{:#?}", res.headers());
 
         println!("Body:\n{}", res.text().await?);
 
         Ok(())
-
-
-        
-
-
     }
 }
