@@ -1,4 +1,8 @@
+use std::time::Instant;
+
 use chrono::{DateTime, Local};
+
+use super::response::{Response, ResponseHeader};
 
 #[derive(Clone)]
 pub enum Method {
@@ -39,10 +43,7 @@ pub struct Request {
     pub method: Method,
     pub url: String,
 
-    pub code_status: ResponseCode,
-    pub time: u128,
-    pub size: u64,
-    pub last_executed: DateTime<Local>,
+    pub response: Option<Response>,
 }
 
 impl Request {
@@ -50,10 +51,7 @@ impl Request {
         Request {
             method: Method::GET,
             url: String::from(""),
-            code_status: ResponseCode::NONE,
-            time: 0,
-            size: 0,
-            last_executed: Local::now(),
+            response: None,
         }
     }
 
@@ -100,7 +98,9 @@ impl Request {
         }
     }
 
-    pub async fn execute_request(&self) -> Result<(), reqwest::Error> {
+    pub async fn execute_request(&mut self) -> Result<(), reqwest::Error> {
+        let start_time = Instant::now();
+
         let client = reqwest::Client::new();
         let request_builder = match self.method {
             Method::GET => client.get(&self.url),
@@ -113,17 +113,34 @@ impl Request {
         };
 
         // Add headers, body, params, and authentication as needed
-        let request_builder = request_builder
-            .header("Content-Type", "application/json")
-            .bearer_auth("your_token_here");
+        // let request_builder = request_builder
+            // .header("Content-Type", "application/json")
+            // .bearer_auth("your_token_here");
 
         let res = request_builder.send().await?;
+        let headers: Vec<ResponseHeader> = res.headers().iter().map(|(k, v)| ResponseHeader {
+            name: k.to_string(),
+            value: v.to_str().unwrap_or("").to_string(),
+        }).collect();
 
-        println!("Status: {}", res.status().as_u16());
-        println!("Headers:\n{:#?}", res.headers());
-
+        let body_size = res.content_length().unwrap_or(0);
         let body = res.text().await?;
-        println!("Body:\n{}", body);
+        let elapsed_time = start_time.elapsed().as_millis();
+
+        self.response = Some(Response {
+            data: body.clone(),
+            data_format: String::from("text"),
+            code_status: ResponseCode::OK,
+            code_text: String::from("OK"),
+            time: elapsed_time,
+            size: body_size,
+            last_executed: Local::now(),
+            headers,
+            //headers: res.headers().iter().map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string())).collect(),
+            cookies: vec![],
+        });
+
+
 
         Ok(())
     }
